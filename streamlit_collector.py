@@ -126,10 +126,17 @@ if st.session_state.stage == 0:
     
     st.subheader("Demographics")
     
+    # Auto-generate participant ID
+    import random
+    import string
+    if 'auto_participant_id' not in st.session_state:
+        st.session_state.auto_participant_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    
+    st.info(f"Your Participant ID: **{st.session_state.auto_participant_id}**")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        participant_id = st.text_input("Participant ID*", help="Enter a unique ID (e.g., initials + numbers)")
         age = st.number_input("Age*", min_value=18, max_value=100, step=1)
         gender = st.selectbox("Gender*", ["", "Male", "Female", "Other", "Prefer not to say"])
     
@@ -137,8 +144,10 @@ if st.session_state.stage == 0:
         year = st.selectbox("Year of Study*", ["", "1st", "2nd", "3rd", "4th", "5th"])
         consent = st.checkbox("I consent to participate in this study*")
     
+    participant_id = st.session_state.auto_participant_id
+    
     if st.button("Continue to Questionnaire", type="primary"):
-        if not all([participant_id, age, gender, year, consent]):
+        if not all([age, gender, year, consent]):
             st.error("Please fill all required fields and provide consent")
         else:
             st.session_state.participant_data['demographics'] = {
@@ -365,4 +374,3 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Mental Health Typing Study")
     st.caption("Research Project - 2026")
-
