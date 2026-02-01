@@ -121,7 +121,6 @@ if st.session_state.stage == 0:
         
         You may withdraw at any time without penalty.
         
-        If you show signs of severe depression, we will provide mental health resources.
         """)
     
     st.subheader("Demographics")
@@ -314,15 +313,10 @@ elif st.session_state.stage == 4:
     mental health patterns in university students.
     """)
     
-    st.info("""
-    **Mental Health Resources:**
-    - University Counseling Center: [Contact Info]
-    - National Mental Health Helpline: [Number]
-    - Crisis Support: [Emergency Contact]
     
     If you have any questions about this study, please contact:
-    [Your Name]
-    [Your Email]
+    [Azlaan]
+    [+339 3975668]
     """)
     
     if 'data_saved' not in st.session_state:
@@ -374,3 +368,4 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Mental Health Typing Study")
     st.caption("Research Project - 2026")
+
