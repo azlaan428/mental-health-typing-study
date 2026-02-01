@@ -346,7 +346,7 @@ with st.sidebar:
     st.subheader("Researcher Access")
     admin_password = st.text_input("Password", type="password")
     
-    if admin_password == "admin123":  # Change this password!
+    if admin_password == "subata2004":  # Change this password!
         st.success("Access granted")
         
         if os.path.exists('all_participant_data.csv'):
@@ -365,3 +365,4 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Mental Health Typing Study")
     st.caption("Research Project - 2026")
+
