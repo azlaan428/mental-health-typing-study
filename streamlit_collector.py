@@ -314,11 +314,6 @@ elif st.session_state.stage == 4:
     """)
     
     
-    If you have any questions about this study, please contact:
-    [Azlaan]
-    [+339 3975668]
-    """)
-    
     if 'data_saved' not in st.session_state:
         # Auto-save data
         csv_file = save_data_to_csv()
@@ -368,4 +363,5 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Mental Health Typing Study")
     st.caption("Research Project - 2026")
+
 
