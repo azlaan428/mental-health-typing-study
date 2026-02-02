@@ -2,8 +2,8 @@ import streamlit as st
 import json
 import time
 from datetime import datetime
-import os
-import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Page config
 st.set_page_config(
@@ -11,6 +11,24 @@ st.set_page_config(
     page_icon="🧠",
     layout="wide"
 )
+
+# Google Sheets Setup
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SHEET_ID = '13wRfdAzoYEx65KKSLnoDeyEcVbsc82VlQbV7NAyMb00'
+
+def get_google_sheet():
+    """Connect to Google Sheet"""
+    try:
+        creds = Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"],
+            scopes=SCOPES
+        )
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(SHEET_ID).sheet1
+        return sheet
+    except Exception as e:
+        st.error(f"Error connecting to Google Sheets: {e}")
+        return None
 
 # Initialize session state
 if 'stage' not in st.session_state:
@@ -51,52 +69,66 @@ def interpret_phq9(score):
     else:
         return "Severe"
 
-def save_data_to_csv():
-    """Save participant data to centralized CSV file"""
-    participant_id = st.session_state.participant_data['demographics']['participant_id']
-    
-    # Prepare row data
-    row_data = {
-        'participant_id': participant_id,
-        'age': st.session_state.participant_data['demographics']['age'],
-        'gender': st.session_state.participant_data['demographics']['gender'],
-        'year_of_study': st.session_state.participant_data['demographics']['year_of_study'],
-        'phq9_total': st.session_state.participant_data['phq9']['total_score'],
-        'phq9_severity': st.session_state.participant_data['phq9']['severity'],
-        'collection_date': datetime.now().isoformat()
-    }
-    
-    # Add PHQ-9 individual scores
-    for i, score in enumerate(st.session_state.participant_data['phq9']['individual_scores'], 1):
-        row_data[f'phq9_q{i}'] = score
-    
-    # Add typing task data
-    for task in st.session_state.keystroke_data:
-        task_name = task['task']
-        row_data[f'{task_name}_duration'] = task.get('duration', 0)
-        row_data[f'{task_name}_word_count'] = len(task['text_content'].split())
-        row_data[f'{task_name}_char_count'] = len(task['text_content'])
-        row_data[f'{task_name}_text'] = task['text_content']
-    
-    # Depression label (PHQ-9 >= 10)
-    row_data['depression_label'] = 1 if row_data['phq9_total'] >= 10 else 0
-    
-    # Create DataFrame
-    new_row = pd.DataFrame([row_data])
-    
-    # Append to CSV file
-    csv_file = 'all_participant_data.csv'
-    
-    if os.path.exists(csv_file):
-        # Append to existing file
-        existing_df = pd.read_csv(csv_file)
-        updated_df = pd.concat([existing_df, new_row], ignore_index=True)
-        updated_df.to_csv(csv_file, index=False)
-    else:
-        # Create new file
-        new_row.to_csv(csv_file, index=False)
-    
-    return csv_file
+def save_to_google_sheets():
+    """Save participant data to Google Sheets"""
+    try:
+        sheet = get_google_sheet()
+        if sheet is None:
+            return False
+        
+        # Prepare row data
+        participant_id = st.session_state.participant_data['demographics']['participant_id']
+        
+        # Check if sheet is empty (add headers)
+        if sheet.row_count == 0 or sheet.row_values(1) == []:
+            headers = [
+                'participant_id', 'age', 'gender', 'year_of_study',
+                'phq9_total', 'phq9_severity', 'depression_label',
+                'phq9_q1', 'phq9_q2', 'phq9_q3', 'phq9_q4', 'phq9_q5',
+                'phq9_q6', 'phq9_q7', 'phq9_q8', 'phq9_q9',
+                'copy_task_duration', 'copy_task_word_count', 'copy_task_char_count',
+                'free_writing_duration', 'free_writing_word_count', 'free_writing_char_count',
+                'copy_task_text', 'free_writing_text', 'collection_date'
+            ]
+            sheet.append_row(headers)
+        
+        # Prepare data row
+        row_data = [
+            participant_id,
+            st.session_state.participant_data['demographics']['age'],
+            st.session_state.participant_data['demographics']['gender'],
+            st.session_state.participant_data['demographics']['year_of_study'],
+            st.session_state.participant_data['phq9']['total_score'],
+            st.session_state.participant_data['phq9']['severity'],
+            1 if st.session_state.participant_data['phq9']['total_score'] >= 10 else 0
+        ]
+        
+        # Add PHQ-9 individual scores
+        row_data.extend(st.session_state.participant_data['phq9']['individual_scores'])
+        
+        # Add typing task data
+        copy_task = st.session_state.keystroke_data[0] if len(st.session_state.keystroke_data) > 0 else {}
+        free_task = st.session_state.keystroke_data[1] if len(st.session_state.keystroke_data) > 1 else {}
+        
+        row_data.extend([
+            copy_task.get('duration', 0),
+            len(copy_task.get('text_content', '').split()),
+            len(copy_task.get('text_content', '')),
+            free_task.get('duration', 0),
+            len(free_task.get('text_content', '').split()),
+            len(free_task.get('text_content', '')),
+            copy_task.get('text_content', ''),
+            free_task.get('text_content', ''),
+            datetime.now().isoformat()
+        ])
+        
+        # Append to sheet
+        sheet.append_row(row_data)
+        return True
+        
+    except Exception as e:
+        st.error(f"Error saving to Google Sheets: {e}")
+        return False
 
 # Stage 0: Consent & Demographics
 if st.session_state.stage == 0:
@@ -120,7 +152,6 @@ if st.session_state.stage == 0:
         - Kept confidential
         
         You may withdraw at any time without penalty.
-        
         """)
     
     st.subheader("Demographics")
@@ -309,18 +340,21 @@ elif st.session_state.stage == 4:
     st.success("""
     Thank you for participating in this study!
     
-    Your data has been saved automatically and will be used to help understand
-    mental health patterns in university students.
+    Your data is being saved...
     """)
     
-    
     if 'data_saved' not in st.session_state:
-        # Auto-save data
-        csv_file = save_data_to_csv()
-        st.session_state.data_saved = True
-        st.success(f"✅ Your response has been recorded successfully!")
+        # Save to Google Sheets
+        with st.spinner("Saving your response..."):
+            success = save_to_google_sheets()
+        
+        if success:
+            st.session_state.data_saved = True
+            st.success("✅ Your response has been saved successfully!")
+            st.balloons()
+        else:
+            st.error("❌ Error saving data. Please contact the researcher.")
     
-    st.balloons()
     
     if st.button("Close"):
         st.session_state.clear()
@@ -339,29 +373,5 @@ with st.sidebar:
             st.text(f"⏸️ {stage_name}")
     
     st.markdown("---")
-    
-    # Admin download section (password protected)
-    st.subheader("Researcher Access")
-    admin_password = st.text_input("Password", type="password")
-    
-    if admin_password == "subata2004":  # Change this password!
-        st.success("Access granted")
-        
-        if os.path.exists('all_participant_data.csv'):
-            df = pd.read_csv('all_participant_data.csv')
-            st.metric("Total Responses", len(df))
-            
-            st.download_button(
-                label="📥 Download All Data (CSV)",
-                data=df.to_csv(index=False),
-                file_name=f"all_responses_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
-            )
-        else:
-            st.info("No data collected yet")
-    
-    st.markdown("---")
     st.caption("Mental Health Typing Study")
     st.caption("Research Project - 2026")
-
-
