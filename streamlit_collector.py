@@ -167,7 +167,7 @@ if st.session_state.stage == 0:
     col1, col2 = st.columns(2)
     
     with col1:
-        age = st.number_input("Age*", min_value=18, max_value=100, step=1)
+        age = st.number_input("Age*", min_value=16, max_value=100, step=1)
         gender = st.selectbox("Gender*", ["", "Male", "Female", "Other", "Prefer not to say"])
     
     with col2:
@@ -375,3 +375,4 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Mental Health Typing Study")
     st.caption("Research Project - 2026")
+
