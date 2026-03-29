@@ -1,0 +1,18 @@
+# Data files
+data/
+*.csv
+*.json
+!requirements.txt
+
+# Model files
+models/
+*.pkl
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+venv/
