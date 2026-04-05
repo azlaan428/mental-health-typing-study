@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: depression-study
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: MYSQL_HOST
+        value: mysql-2f7ea6c7-azlaanmohammad95-9df7.a.aivencloud.com
+      - key: MYSQL_PORT
+        value: 23634
+      - key: MYSQL_USER
+        value: avnadmin
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DATABASE
+        value: defaultdb
+      - key: MYSQL_SSL_CA
+        value: ca.pem

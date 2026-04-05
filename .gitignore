@@ -3,6 +3,7 @@ data/
 *.csv
 *.json
 !requirements.txt
+.streamlit/secrets.toml
 
 # Model files
 models/

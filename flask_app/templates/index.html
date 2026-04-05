@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mental Health Typing Study</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --primary: #1a3a2a;
+    --accent: #4a7c59;
+    --accent-light: #e8f0ea;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e2e0db;
+    --danger: #dc2626;
+    --warning-bg: #fef3c7;
+    --warning-border: #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .progress-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    align-items: center;
+  }
+
+  .progress-step {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.4s;
+  }
+
+  .progress-step.active { background: var(--accent); }
+  .progress-step.done { background: var(--primary); }
+
+  .card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 2.5rem;
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  .card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+  }
+
+  .info-box {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--primary);
+  }
+
+  .info-box ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .info-box li { margin-bottom: 0.3rem; }
+
+  .field { margin-bottom: 1.25rem; }
+
+  label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  input[type="number"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .participant-id {
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .participant-id strong { font-size: 1rem; letter-spacing: 0.05em; }
+
+  .checkbox-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+
+  .checkbox-wrap input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 2px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .checkbox-wrap span { font-size: 0.9rem; line-height: 1.5; color: var(--text); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    width: 100%;
+    margin-top: 1.5rem;
+  }
+
+  .btn-primary:hover { background: var(--accent); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-start {
+    background: var(--accent);
+    color: white;
+    padding: 0.65rem 1.75rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-start:hover { background: var(--primary); }
+
+  .error {
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    background: #fef2f2;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+    display: none;
+  }
+
+  /* PHQ-9 */
+  .phq-question {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    background: var(--bg);
+  }
+
+  .phq-question p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: var(--primary);
+  }
+
+  .phq-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .phq-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+
+  .phq-option:hover { background: var(--accent-light); }
+  .phq-option input { accent-color: var(--accent); cursor: pointer; }
+
+  /* Typing task */
+  .ref-text {
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    color: var(--primary);
+  }
+
+  .timer-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .task-locked { opacity: 0.4; pointer-events: none; }
+
+  /* Warning */
+  .warning-box {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* Success */
+  .success-icon {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .success-card {
+    text-align: center;
+  }
+
+  .success-card h2 { margin-bottom: 1rem; }
+  .success-card p { color: var(--muted); line-height: 1.7; margin-bottom: 1rem; }
+
+  .resources {
+    background: var(--accent-light);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: left;
+    font-size: 0.875rem;
+    line-height: 1.8;
+    margin-top: 1.5rem;
+  }
+
+  .resources strong { display: block; margin-bottom: 0.5rem; color: var(--primary); }
+
+  .next-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background 0.2s;
+  }
+
+  .next-btn:hover { background: var(--primary); }
+
+  .stage { display: none; }
+  .stage.active { display: block; }
+
+  @media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .phq-options { grid-template-columns: 1fr; }
+    .card { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🧠 Mental Health Typing Study</h1>
+    <p>Ziauddin University &mdash; Biomedical Engineering Research</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-step active" id="ps1"></div>
+    <div class="progress-step" id="ps2"></div>
+    <div class="progress-step" id="ps3"></div>
+    <div class="progress-step" id="ps4"></div>
+    <div class="progress-step" id="ps5"></div>
+  </div>
+
+  <!-- STAGE 1: CONSENT -->
+  <div class="stage active" id="stage1">
+    <div class="card" id="consent-section">
+      <h2>Participant Information &amp; Consent</h2>
+
+      <div class="info-box">
+        <strong>About this study:</strong> This study investigates the relationship between typing patterns and mental health in university students.
+        <ul>
+          <li>Answer demographic questions and complete a short mental health questionnaire (PHQ-9)</li>
+          <li>Complete two typing tasks (~15 minutes total)</li>
+          <li>Your data will be anonymized and used only for research purposes</li>
+          <li>Your IP address will be recorded solely for detecting duplicate submissions and assessing geographic distribution &mdash; it will not be used to identify you personally</li>
+          <li>A screenshot of this consent form will be stored as proof of consent for ethics committee review</li>
+          <li>You may withdraw at any time without penalty</li>
+        </ul>
+      </div>
+
+      <div class="participant-id">
+        🪪 Your Participant ID: <strong id="pid-display"></strong>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Age *</label>
+          <input type="number" id="age" min="18" max="100" placeholder="e.g. 21">
+        </div>
+        <div class="field">
+          <label>Gender *</label>
+          <select id="gender">
+            <option value="">Select...</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+            <option>Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Year of Study *</label>
+        <select id="year">
+          <option value="">Select...</option>
+          <option>1st</option>
+          <option>2nd</option>
+          <option>3rd</option>
+          <option>4th</option>
+          <option>5th</option>
+        </select>
+      </div>
+
+      <label class="checkbox-wrap">
+        <input type="checkbox" id="consent-check">
+        <span>I have read and understood the study information above. I consent to participate, including the collection of my IP address and a screenshot of this consent form for ethics committee review purposes.</span>
+      </label>
+
+      <div class="error" id="err1">Please fill in all required fields and provide consent.</div>
+      <button class="btn btn-primary" onclick="submitConsent()">Continue to Questionnaire &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STAGE 2: PHQ-9 -->
+  <div class="stage" id="stage2">
+    <div class="card">
+      <h2>PHQ-9 Questionnaire</h2>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;">Over the last 2 weeks, how often have you been bothered by the following problems?</p>
+
+      <div id="phq-questions"></div>
+
+      <div class="error" id="err2">Please answer all questions before continuing.</div>
+      <button class="btn btn-primary" onclick="submitPHQ9()">Continue to Typing Tasks &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STAGE 3: COPY TASK -->
+  <div class="stage" id="stage3">
+    <div class="card">
+      <h2>Task 1: Copy Text</h2>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1.25rem;">Type the text below exactly as written. Type naturally at your normal pace.</p>
+
+      <div class="ref-text">
+        The quick brown fox jumps over the lazy dog. Mental health is an important aspect of overall well-being. University students often face unique challenges including academic pressure, social adjustments, and future uncertainties. It is essential to recognize signs of distress early and seek appropriate support when needed.
+      </div>
+
+      <div id="copy-start-wrap">
+        <button class="btn btn-start" onclick="startCopyTask()">Start Task</button>
+      </div>
+
+      <div id="copy-task-wrap" class="task-locked">
+        <div class="field">
+          <label>Type here:</label>
+          <textarea id="copy-input" placeholder="Click Start Task first..." oninput="updateCopyCount()"></textarea>
+        </div>
+        <div class="timer-bar">
+          <span id="copy-timer">⏱ 0:00</span>
+          <span id="copy-count">Words: 0</span>
+        </div>
+        <div class="error" id="err3">Please type more before completing.</div>
+        <button class="btn btn-primary" onclick="submitCopyTask()">Complete Task &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE 4: FREE WRITING -->
+  <div class="stage" id="stage4">
+    <div class="card">
+      <h2>Task 2: Free Writing</h2>
+      <div class="info-box">
+        Please write about your typical day as a university student. Describe your daily routine, activities, and how you generally feel. Write naturally for 3&ndash;4 minutes.
+      </div>
+
+      <div id="free-start-wrap">
+        <button class="btn btn-start" onclick="startFreeTask()">Start Task</button>
+      </div>
+
+      <div id="free-task-wrap" class="task-locked">
+        <div class="field">
+          <textarea id="free-input" placeholder="Click Start Task first..." oninput="updateFreeCount()"></textarea>
+        </div>
+        <div class="timer-bar">
+          <span id="free-timer">⏱ 0:00</span>
+          <span id="free-count">Words: 0</span>
+        </div>
+        <div class="error" id="err4">Please write more before completing.</div>
+        <button class="btn btn-primary" onclick="submitFreeTask()">Complete &amp; Submit &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE 5: DONE -->
+  <div class="stage" id="stage5">
+    <div class="card success-card">
+      <div class="success-icon">✅</div>
+      <h2>Thank You!</h2>
+      <p>Your response has been saved successfully. Your participation helps advance mental health research.</p>
+
+      <div class="warning-box" id="high-score-warning">
+        ⚠️ Your responses suggest you may be experiencing significant distress. Please consider reaching out to a mental health professional.
+      </div>
+
+      <div class="resources">
+        <strong>Mental Health Resources</strong>
+        Umang Helpline (Pakistan): <strong>0317-4288665</strong><br>
+        Rozan Counseling: <strong>051-2890505</strong><br>
+        University Counseling: Contact your department
+      </div>
+
+      <button class="next-btn" onclick="nextParticipant()">Next Participant</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── State ───────────────────────────────
+const state = {
+  participantId: generateId(),
+  sessionId: generateUUID(),
+  stage: 1,
+  consent: { screenshot: null },
+  demographics: {},
+  phq9: { scores: [], total: 0, severity: "" },
+  copyTask: { text: "", duration: 0, startTime: null, timer: null },
+  freeTask: { text: "", duration: 0, startTime: null, timer: null },
+};
+
+const PHQ9_QUESTIONS = [
+  "Little interest or pleasure in doing things",
+  "Feeling down, depressed, or hopeless",
+  "Trouble falling or staying asleep, or sleeping too much",
+  "Feeling tired or having little energy",
+  "Poor appetite or overeating",
+  "Feeling bad about yourself or that you are a failure",
+  "Trouble concentrating on things",
+  "Moving or speaking slowly, or being fidgety/restless",
+  "Thoughts that you would be better off dead or hurting yourself"
+];
+
+const PHQ9_OPTIONS = ["Not at all (0)", "Several days (1)", "More than half the days (2)", "Nearly every day (3)"];
+
+function generateId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  return Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+// ─── Init ────────────────────────────────
+document.getElementById("pid-display").textContent = state.participantId;
+
+// Build PHQ-9
+const phqContainer = document.getElementById("phq-questions");
+PHQ9_QUESTIONS.forEach((q, i) => {
+  const div = document.createElement("div");
+  div.className = "phq-question";
+  div.innerHTML = `<p>${i+1}. ${q}</p><div class="phq-options">${
+    PHQ9_OPTIONS.map((opt, j) => `
+      <label class="phq-option">
+        <input type="radio" name="phq${i}" value="${j}"> ${opt}
+      </label>`).join("")
+  }</div>`;
+  phqContainer.appendChild(div);
+});
+
+// ─── Progress ────────────────────────────
+function setStage(n) {
+  document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
+  document.getElementById(`stage${n}`).classList.add("active");
+  document.querySelectorAll(".progress-step").forEach((s, i) => {
+    s.classList.remove("active", "done");
+    if (i + 1 < n) s.classList.add("done");
+    if (i + 1 === n) s.classList.add("active");
+  });
+  state.stage = n;
+  window.scrollTo(0, 0);
+}
+
+// ─── Stage 1: Consent ────────────────────
+async function submitConsent() {
+  const age    = document.getElementById("age").value;
+  const gender = document.getElementById("gender").value;
+  const year   = document.getElementById("year").value;
+  const consent = document.getElementById("consent-check").checked;
+  const err = document.getElementById("err1");
+
+  if (!age || !gender || !year || !consent) {
+    err.style.display = "block";
+    return;
+  }
+  err.style.display = "none";
+
+  state.demographics = { age: parseInt(age), gender, year_of_study: year };
+
+  // Capture consent screenshot
+  try {
+    const section = document.getElementById("consent-section");
+    const canvas  = await html2canvas(section, { scale: 1.5, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+
+    // Add metadata text
+    pdf.setFontSize(9);
+    pdf.setTextColor(100);
+    pdf.text(`Participant ID: ${state.participantId}`, 20, pdfH + 20);
+    pdf.text(`Session ID: ${state.sessionId}`, 20, pdfH + 32);
+    pdf.text(`Timestamp: ${new Date().toISOString()}`, 20, pdfH + 44);
+
+    const pdfBase64 = pdf.output("datauristring").split(",")[1];
+    state.consent.screenshot = pdfBase64;
+  } catch(e) {
+    console.warn("Screenshot failed:", e);
+    state.consent.screenshot = null;
+  }
+
+  setStage(2);
+}
+
+// ─── Stage 2: PHQ-9 ──────────────────────
+function interpretPHQ9(score) {
+  if (score <= 4)  return "Minimal";
+  if (score <= 9)  return "Mild";
+  if (score <= 14) return "Moderate";
+  if (score <= 19) return "Moderately Severe";
+  return "Severe";
+}
+
+function submitPHQ9() {
+  const scores = [];
+  for (let i = 0; i < 9; i++) {
+    const sel = document.querySelector(`input[name="phq${i}"]:checked`);
+    if (!sel) {
+      document.getElementById("err2").style.display = "block";
+      return;
+    }
+    scores.push(parseInt(sel.value));
+  }
+  document.getElementById("err2").style.display = "none";
+
+  const total = scores.reduce((a, b) => a + b, 0);
+  state.phq9 = { scores, total, severity: interpretPHQ9(total) };
+  setStage(3);
+}
+
+// ─── Stage 3: Copy Task ───────────────────
+function startCopyTask() {
+  document.getElementById("copy-start-wrap").style.display = "none";
+  const wrap = document.getElementById("copy-task-wrap");
+  wrap.classList.remove("task-locked");
+  document.getElementById("copy-input").focus();
+  state.copyTask.startTime = Date.now();
+  state.copyTask.timer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - state.copyTask.startTime) / 1000);
+    document.getElementById("copy-timer").textContent = `⏱ ${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,"0")}`;
+  }, 1000);
+}
+
+function updateCopyCount() {
+  const text = document.getElementById("copy-input").value;
+  document.getElementById("copy-count").textContent = `Words: ${text.trim().split(/\s+/).filter(Boolean).length}`;
+}
+
+function submitCopyTask() {
+  const text = document.getElementById("copy-input").value.trim();
+  if (text.length < 50) {
+    document.getElementById("err3").style.display = "block";
+    return;
+  }
+  document.getElementById("err3").style.display = "none";
+  clearInterval(state.copyTask.timer);
+  state.copyTask.text = text;
+  state.copyTask.duration = (Date.now() - state.copyTask.startTime) / 1000;
+  setStage(4);
+}
+
+// ─── Stage 4: Free Writing ────────────────
+function startFreeTask() {
+  document.getElementById("free-start-wrap").style.display = "none";
+  const wrap = document.getElementById("free-task-wrap");
+  wrap.classList.remove("task-locked");
+  document.getElementById("free-input").focus();
+  state.freeTask.startTime = Date.now();
+  state.freeTask.timer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - state.freeTask.startTime) / 1000);
+    document.getElementById("free-timer").textContent = `⏱ ${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,"0")}`;
+  }, 1000);
+}
+
+function updateFreeCount() {
+  const text = document.getElementById("free-input").value;
+  document.getElementById("free-count").textContent = `Words: ${text.trim().split(/\s+/).filter(Boolean).length}`;
+}
+
+async function submitFreeTask() {
+  const text = document.getElementById("free-input").value.trim();
+  if (text.length < 50) {
+    document.getElementById("err4").style.display = "block";
+    return;
+  }
+  document.getElementById("err4").style.display = "none";
+  clearInterval(state.freeTask.timer);
+  state.freeTask.text = text;
+  state.freeTask.duration = (Date.now() - state.freeTask.startTime) / 1000;
+
+  // Submit to Flask
+  const btn = document.querySelector("#stage4 .btn-primary");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    const payload = {
+      participant_id:     state.participantId,
+      session_id:         state.sessionId,
+      age:                state.demographics.age,
+      gender:             state.demographics.gender,
+      year_of_study:      state.demographics.year_of_study,
+      phq9_scores:        state.phq9.scores,
+      phq9_total:         state.phq9.total,
+      phq9_severity:      state.phq9.severity,
+      copy_text:          state.copyTask.text,
+      copy_duration:      state.copyTask.duration,
+      free_text:          state.freeTask.text,
+      free_duration:      state.freeTask.duration,
+      consent_screenshot: state.consent.screenshot,
+    };
+
+    const res = await fetch("/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (data.status !== "ok") throw new Error(data.message);
+
+    if (state.phq9.total >= 20) {
+      document.getElementById("high-score-warning").style.display = "block";
+    }
+    setStage(5);
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = "Complete & Submit →";
+    alert("Error saving data: " + e.message + ". Please try again.");
+  }
+}
+
+// ─── Next Participant ─────────────────────
+function nextParticipant() {
+  window.location.reload();
+}
+</script>
+</body>
+</html>
