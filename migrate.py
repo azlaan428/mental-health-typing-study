@@ -19,7 +19,7 @@ DB_CONFIG = {
     "host":     "mysql-2f7ea6c7-azlaanmohammad95-9df7.a.aivencloud.com",
     "port":     23634,
     "user":     "avnadmin",
-    "password": "AVNS_C9VnxHefp8Lvg4yeZax",
+    "password": "xxxxxxxxxxxxxxxxxxx",
     "database": "defaultdb",
     "ssl_ca":   "ca.pem",
 }
