@@ -16,7 +16,7 @@ import sys
 # CONFIG: Fill these in with your Aiven credentials
 # ─────────────────────────────────────────
 DB_CONFIG = {
-    "host":     "mysql-2f7ea6c7-azlaanmohammad95-9df7.a.aivencloud.com",
+    "host":     "xxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "port":     23634,
     "user":     "avnadmin",
     "password": "xxxxxxxxxxxxxxxxxxx",
